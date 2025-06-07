@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session, jsonify, flash
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify, flash, send_from_directory
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 import os
@@ -7,7 +7,7 @@ from pos import PuntoDeVenta
 from inventario import GestorInventario
 from datetime import datetime
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static')
 app.secret_key = os.environ.get('SECRET_KEY', 'e8a521dd52efc86130c0c1392c5dc759')
 app.config['SESSION_TYPE'] = 'filesystem'
 
@@ -35,6 +35,10 @@ login_manager.login_view = 'login'
 @app.route('/')
 def index():
     return render_template('index.html')
+
+@app.route('/static/<path:filename>')
+def serve_static(filename):
+    return send_from_directory(app.static_folder, filename)
 
 @app.route('/demo')
 def demo():
