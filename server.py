@@ -7,6 +7,11 @@ from pos import PuntoDeVenta
 from inventario import GestorInventario
 from datetime import datetime
 
+class Usuario(UserMixin):
+    def __init__(self, id, username):
+        self.id = id
+        self.username = username
+
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'e8a521dd52efc86130c0c1392c5dc759')
 app.config['SESSION_TYPE'] = 'filesystem'
@@ -32,6 +37,12 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
+@login_manager.user_loader
+def load_user(user_id):
+    if user_id == '1':  # Para el usuario demo
+        return Usuario(1, 'demo')
+    return None
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -45,22 +56,18 @@ def serve_static(filename):
         return "File not found", 404
 
 @app.route('/demo')
+@login_required
 def demo():
-    if 'user_id' not in session:
-        return redirect(url_for('login'))
     return render_template('demo.html')
 
 @app.route('/pos')
+@login_required
 def pos_page():
-    if 'user_id' not in session:
-        return redirect(url_for('login'))
     return render_template('pos.html')
 
 @app.route('/inventario')
+@login_required
 def inventario_page():
-    if 'user_id' not in session:
-        return redirect(url_for('login'))
-    
     stats = inventario.obtener_estadisticas_inventario()
     categorias = inventario.obtener_categorias()
     productos = inventario.obtener_todos_productos()
@@ -79,7 +86,8 @@ def login():
         password = request.form.get('password')
         
         if username == 'demo' and password == 'demo123':
-            session['user_id'] = 1
+            user = Usuario(1, 'demo')
+            login_user(user)
             session['authenticated'] = True
             return redirect(url_for('demo'))
         
@@ -88,94 +96,76 @@ def login():
     return render_template('login.html')
 
 @app.route('/logout')
+@login_required
 def logout():
+    logout_user()
     session.clear()
     return redirect(url_for('index'))
 
 @app.route('/api/productos')
+@login_required
 def api_productos():
-    if 'authenticated' not in session:
-        return jsonify({'error': 'No autorizado'}), 401
-    
     categoria = request.args.get('categoria', 'todos')
     productos = inventario.obtener_todos_productos(categoria=categoria)
     return jsonify([dict(p) for p in productos])
 
 @app.route('/api/productos/buscar')
+@login_required
 def api_buscar_productos():
-    if 'authenticated' not in session:
-        return jsonify({'error': 'No autorizado'}), 401
-    
     termino = request.args.get('q', '')
     productos = pos.buscar_productos(termino)
     return jsonify([dict(p) for p in productos])
 
 @app.route('/api/carrito')
+@login_required
 def api_carrito():
-    if 'authenticated' not in session:
-        return jsonify({'error': 'No autorizado'}), 401
-    
     return jsonify({
         'items': pos.carrito,
         'total': pos.total
     })
 
 @app.route('/api/carrito/agregar', methods=['POST'])
+@login_required
 def api_agregar_al_carrito():
-    if 'authenticated' not in session:
-        return jsonify({'error': 'No autorizado'}), 401
-    
     data = request.get_json()
     success, message = pos.agregar_producto(data['producto_id'], data['cantidad'])
     return jsonify({'success': success, 'message': message})
 
 @app.route('/api/carrito/actualizar', methods=['POST'])
+@login_required
 def api_actualizar_carrito():
-    if 'authenticated' not in session:
-        return jsonify({'error': 'No autorizado'}), 401
-    
     data = request.get_json()
     success, message = pos.actualizar_cantidad(data['producto_id'], data['cantidad'])
     return jsonify({'success': success, 'message': message})
 
 @app.route('/api/carrito/quitar', methods=['POST'])
+@login_required
 def api_quitar_del_carrito():
-    if 'authenticated' not in session:
-        return jsonify({'error': 'No autorizado'}), 401
-    
     data = request.get_json()
     success, message = pos.quitar_producto(data['producto_id'])
     return jsonify({'success': success, 'message': message})
 
 @app.route('/api/ventas/procesar', methods=['POST'])
+@login_required
 def api_procesar_venta():
-    if 'authenticated' not in session:
-        return jsonify({'error': 'No autorizado'}), 401
-    
-    success, message = pos.procesar_venta(session.get('user_id', 1))
+    success, message = pos.procesar_venta(current_user.id)
     return jsonify({'success': success, 'message': message})
 
 @app.route('/api/productos/bajo-stock')
+@login_required
 def api_productos_bajo_stock():
-    if 'authenticated' not in session:
-        return jsonify({'error': 'No autorizado'}), 401
-    
     productos = inventario.obtener_productos_bajo_stock()
     return jsonify([dict(p) for p in productos])
 
 @app.route('/api/ventas/hoy')
+@login_required
 def api_ventas_hoy():
-    if 'authenticated' not in session:
-        return jsonify({'error': 'No autorizado'}), 401
-    
     ventas = db.get_ventas_hoy()
     return jsonify([dict(v) for v in ventas])
 
 @app.route('/api/productos/mas-vendidos')
+@login_required
 def api_productos_mas_vendidos():
-    if 'authenticated' not in session:
-        return jsonify({'error': 'No autorizado'}), 401
-    
     productos = db.get_productos_mas_vendidos()
     return jsonify([dict(p) for p in productos])
 
