@@ -1,6 +1,7 @@
 import sqlite3
 import os
 import logging
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -138,6 +139,22 @@ class Database:
             return cursor.fetchall()
         except Exception as e:
             logger.error(f"Error al obtener productos con bajo stock: {str(e)}")
+            raise
+
+    def get_productos_mas_vendidos(self, limite=5):
+        try:
+            cursor = self.conn.cursor()
+            cursor.execute('''
+                SELECT p.*, SUM(dv.cantidad) as total_vendido
+                FROM productos p
+                JOIN detalles_venta dv ON p.id = dv.producto_id
+                GROUP BY p.id
+                ORDER BY total_vendido DESC
+                LIMIT ?
+            ''', (limite,))
+            return cursor.fetchall()
+        except Exception as e:
+            logger.error(f"Error al obtener productos más vendidos: {str(e)}")
             raise
 
 if __name__ == '__main__':

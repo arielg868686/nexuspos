@@ -1,5 +1,8 @@
 from database import Database
 from datetime import datetime
+import logging
+
+logger = logging.getLogger(__name__)
 
 class PuntoDeVenta:
     def __init__(self, db):
@@ -115,6 +118,21 @@ class PuntoDeVenta:
     def buscar_productos(self, termino):
         return self.db.obtener_todos('''
             SELECT * FROM productos 
-            WHERE codigo LIKE ? OR nombre LIKE ? OR categoria LIKE ?
+            WHERE codigo LIKE ? OR nombre LIKE ?
             LIMIT 10
-        ''', (f'%{termino}%', f'%{termino}%', f'%{termino}%')) 
+        ''', (f'%{termino}%', f'%{termino}%'))
+
+    def get_ventas_hoy(self):
+        try:
+            hoy = datetime.now().strftime('%Y-%m-%d')
+            cursor = self.db.get_connection().cursor()
+            cursor.execute('''
+                SELECT COUNT(*) as total_ventas, 
+                       SUM(total) as total_ingresos
+                FROM ventas 
+                WHERE date(fecha) = ?
+            ''', (hoy,))
+            return cursor.fetchone()
+        except Exception as e:
+            logger.error(f"Error al obtener ventas del día: {str(e)}")
+            raise 
