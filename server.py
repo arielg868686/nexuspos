@@ -89,7 +89,7 @@ def demo():
     try:
         # Obtener estadísticas de ventas
         ventas_hoy = pos.get_ventas_hoy()
-        productos = inventario.obtener_productos()
+        productos = inventario.obtener_todos_productos()
         
         # Filtrar productos con stock bajo
         productos_bajo_stock = [p for p in productos if p['stock'] < 10]
