@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, session, j
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 import os
-from database import init_db, get_productos_bajo_stock, get_ventas_hoy, get_productos_mas_vendidos, Database
+from database import Database
 from pos import PuntoDeVenta
 from inventario import GestorInventario
 from datetime import datetime
