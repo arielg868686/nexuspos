@@ -3,173 +3,136 @@ import sqlite3
 import psycopg2
 import psycopg2.extras
 from datetime import datetime
+import logging
+
+logger = logging.getLogger(__name__)
 
 class Database:
-    def __init__(self, db_file='nexuspos.db'):
+    def __init__(self):
+        self.db_file = 'nexuspos.db'
         if os.environ.get('FLASK_ENV') == 'production':
-            # En producción, usar el directorio actual
-            self.db_file = os.path.join(os.getcwd(), db_file)
-            print(f"Usando base de datos en: {self.db_file}")
-        else:
-            self.db_file = db_file
-            print(f"Usando base de datos en: {self.db_file}")
+            self.db_file = os.path.join(os.getcwd(), self.db_file)
+        print(f"Usando base de datos en: {self.db_file}")
         
-        self.is_postgres = os.environ.get('FLASK_ENV') == 'production'
         try:
+            # Intentar conectar a PostgreSQL primero
+            database_url = os.environ.get('DATABASE_URL')
+            if database_url and database_url.startswith("postgres://"):
+                database_url = database_url.replace("postgres://", "postgresql://", 1)
+                self.conn = sqlite3.connect(self.db_file)
+                self.crear_tablas()
+                return
+        except Exception as e:
+            print(f"Error al conectar a PostgreSQL: {str(e)}")
+            print("Cambiando a SQLite...")
+        
+        # Si PostgreSQL falla o no está configurado, usar SQLite
+        try:
+            self.conn = sqlite3.connect(self.db_file)
+            self.conn.row_factory = sqlite3.Row
             self.crear_tablas()
         except Exception as e:
-            print(f"Error al crear tablas: {str(e)}")
-            if self.is_postgres:
-                print("Intentando usar SQLite como fallback...")
-                self.is_postgres = False
-                try:
-                    self.crear_tablas()
-                except Exception as e:
-                    print(f"Error al crear tablas con SQLite: {str(e)}")
-                    raise
-
-    def get_connection(self):
-        """Obtiene una conexión a la base de datos"""
-        if self.is_postgres:
-            try:
-                database_url = os.environ.get('DATABASE_URL')
-                if not database_url:
-                    raise ValueError("DATABASE_URL no está configurada")
-                
-                if database_url.startswith("postgres://"):
-                    database_url = database_url.replace("postgres://", "postgresql://", 1)
-                
-                conn = psycopg2.connect(database_url)
-                conn.row_factory = psycopg2.extras.DictRow
-                return conn
-            except Exception as e:
-                print(f"Error al conectar a PostgreSQL: {str(e)}")
-                print("Cambiando a SQLite...")
-                self.is_postgres = False
-        
-        conn = sqlite3.connect(self.db_file)
-        conn.row_factory = sqlite3.Row
-        return conn
-
-    def ejecutar(self, query, params=()):
-        """Ejecuta una consulta SQL"""
-        conn = self.get_connection()
-        try:
-            if self.is_postgres:
-                with conn.cursor() as cur:
-                    cur.execute(query, params)
-            else:
-                cur = conn.cursor()
-                cur.execute(query, params)
-            conn.commit()
-        finally:
-            conn.close()
-
-    def obtener_uno(self, query, params=()):
-        """Ejecuta una consulta y retorna un solo resultado"""
-        conn = self.get_connection()
-        try:
-            if self.is_postgres:
-                with conn.cursor() as cur:
-                    cur.execute(query, params)
-                    return cur.fetchone()
-            else:
-                cur = conn.cursor()
-                cur.execute(query, params)
-                return cur.fetchone()
-        finally:
-            conn.close()
-
-    def obtener_todos(self, query, params=()):
-        """Ejecuta una consulta y retorna todos los resultados"""
-        conn = self.get_connection()
-        try:
-            if self.is_postgres:
-                with conn.cursor() as cur:
-                    cur.execute(query, params)
-                    return cur.fetchall()
-            else:
-                cur = conn.cursor()
-                cur.execute(query, params)
-                return cur.fetchall()
-        finally:
-            conn.close()
+            print(f"Error al inicializar SQLite: {str(e)}")
+            raise
 
     def crear_tablas(self):
-        """Crea las tablas necesarias si no existen"""
-        # Tabla de usuarios
-        self.ejecutar('''
-            CREATE TABLE IF NOT EXISTS usuarios (
-                id SERIAL PRIMARY KEY,
-                username TEXT UNIQUE NOT NULL,
-                password TEXT NOT NULL,
-                nombre TEXT,
-                rol TEXT NOT NULL,
-                fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        ''')
+        try:
+            cursor = self.conn.cursor()
+            
+            # Tabla de usuarios
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS usuarios (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    username TEXT UNIQUE NOT NULL,
+                    password TEXT NOT NULL,
+                    email TEXT UNIQUE,
+                    rol TEXT NOT NULL,
+                    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            ''')
+            
+            # Tabla de productos
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS productos (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    codigo TEXT UNIQUE NOT NULL,
+                    nombre TEXT NOT NULL,
+                    descripcion TEXT,
+                    precio REAL NOT NULL,
+                    stock INTEGER NOT NULL DEFAULT 0,
+                    categoria TEXT,
+                    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            ''')
+            
+            # Tabla de ventas
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS ventas (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    total REAL NOT NULL,
+                    usuario_id INTEGER,
+                    FOREIGN KEY (usuario_id) REFERENCES usuarios (id)
+                )
+            ''')
+            
+            # Tabla de detalles de venta
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS detalles_venta (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    venta_id INTEGER,
+                    producto_id INTEGER,
+                    cantidad INTEGER NOT NULL,
+                    precio_unitario REAL NOT NULL,
+                    subtotal REAL NOT NULL,
+                    FOREIGN KEY (venta_id) REFERENCES ventas (id),
+                    FOREIGN KEY (producto_id) REFERENCES productos (id)
+                )
+            ''')
+            
+            # Insertar usuario demo si no existe
+            cursor.execute('''
+                INSERT OR IGNORE INTO usuarios (username, password, rol)
+                VALUES (?, ?, ?)
+            ''', ('demo', 'demo123', 'admin'))
+            
+            self.conn.commit()
+            logger.info("Tablas creadas correctamente")
+        except Exception as e:
+            logger.error(f"Error al crear tablas: {str(e)}")
+            raise
 
-        # Tabla de productos
-        self.ejecutar('''
-            CREATE TABLE IF NOT EXISTS productos (
-                id SERIAL PRIMARY KEY,
-                codigo TEXT UNIQUE NOT NULL,
-                nombre TEXT NOT NULL,
-                descripcion TEXT,
-                precio REAL NOT NULL,
-                stock INTEGER NOT NULL DEFAULT 0,
-                stock_minimo INTEGER NOT NULL DEFAULT 0,
-                categoria TEXT NOT NULL,
-                fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        ''')
+    def obtener_uno(self, query, params=()):
+        try:
+            cursor = self.conn.cursor()
+            cursor.execute(query, params)
+            return cursor.fetchone()
+        except Exception as e:
+            logger.error(f"Error en obtener_uno: {str(e)}")
+            raise
 
-        # Tabla de ventas
-        self.ejecutar('''
-            CREATE TABLE IF NOT EXISTS ventas (
-                id SERIAL PRIMARY KEY,
-                fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                total REAL NOT NULL,
-                usuario_id INTEGER,
-                FOREIGN KEY (usuario_id) REFERENCES usuarios (id)
-            )
-        ''')
+    def obtener_todos(self, query, params=()):
+        try:
+            cursor = self.conn.cursor()
+            cursor.execute(query, params)
+            return cursor.fetchall()
+        except Exception as e:
+            logger.error(f"Error en obtener_todos: {str(e)}")
+            raise
 
-        # Tabla de detalles de venta
-        self.ejecutar('''
-            CREATE TABLE IF NOT EXISTS detalles_venta (
-                id SERIAL PRIMARY KEY,
-                venta_id INTEGER NOT NULL,
-                producto_id INTEGER NOT NULL,
-                cantidad INTEGER NOT NULL,
-                precio_unitario REAL NOT NULL,
-                subtotal REAL NOT NULL,
-                FOREIGN KEY (venta_id) REFERENCES ventas (id),
-                FOREIGN KEY (producto_id) REFERENCES productos (id)
-            )
-        ''')
+    def ejecutar(self, query, params=()):
+        try:
+            cursor = self.conn.cursor()
+            cursor.execute(query, params)
+            self.conn.commit()
+            return cursor.lastrowid
+        except Exception as e:
+            logger.error(f"Error en ejecutar: {str(e)}")
+            self.conn.rollback()
+            raise
 
-        # Tabla de movimientos de stock
-        self.ejecutar('''
-            CREATE TABLE IF NOT EXISTS movimientos_stock (
-                id SERIAL PRIMARY KEY,
-                producto_id INTEGER NOT NULL,
-                cantidad INTEGER NOT NULL,
-                tipo_movimiento TEXT NOT NULL,
-                motivo TEXT,
-                usuario_id INTEGER,
-                fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (producto_id) REFERENCES productos (id),
-                FOREIGN KEY (usuario_id) REFERENCES usuarios (id)
-            )
-        ''')
-
-        # Insertar usuario demo si no existe
-        self.ejecutar('''
-            INSERT INTO usuarios (username, password, nombre, rol)
-            VALUES (%s, %s, %s, %s)
-            ON CONFLICT (username) DO NOTHING
-        ''', ('demo', 'demo123', 'Usuario Demo', 'admin'))
+    def get_connection(self):
+        return self.conn
 
     def get_ventas_hoy(self):
         """Obtiene las ventas del día actual"""
