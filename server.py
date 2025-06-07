@@ -11,7 +11,7 @@ app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'e8a521dd52efc86130c0c1392c5dc759')
 app.config['SESSION_TYPE'] = 'filesystem'
 
-# Configuración para producción
+# Configuración de la base de datos
 if os.environ.get('FLASK_ENV') == 'production':
     app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///nexuspos.db')
 else:
@@ -177,6 +177,10 @@ def api_productos_mas_vendidos():
     
     productos = get_productos_mas_vendidos()
     return jsonify([dict(p) for p in productos])
+
+@app.route('/salud')
+def salud():
+    return jsonify({"status": "ok"}), 200
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
