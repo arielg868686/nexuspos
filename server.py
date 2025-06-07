@@ -86,7 +86,14 @@ def serve_static(filename):
 @app.route('/demo')
 @login_required
 def demo():
-    return render_template('demo.html')
+    try:
+        # Obtener estadísticas de ventas
+        ventas_hoy = pos.get_ventas_hoy()
+        productos = inventario.obtener_productos()
+        return render_template('demo.html', ventas_hoy=ventas_hoy, productos=productos)
+    except Exception as e:
+        logger.error(f"Error en demo: {str(e)}")
+        return "Error interno del servidor", 500
 
 @app.route('/pos')
 @login_required
