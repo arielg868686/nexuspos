@@ -1,15 +1,14 @@
-from database import get_db_connection
+from database import Database
 from datetime import datetime
 
 class PuntoDeVenta:
-    def __init__(self):
+    def __init__(self, db):
+        self.db = db
         self.carrito = []
         self.total = 0.0
 
     def agregar_producto(self, producto_id, cantidad):
-        conn = get_db_connection()
-        producto = conn.execute('SELECT * FROM productos WHERE id = ?', (producto_id,)).fetchone()
-        conn.close()
+        producto = self.db.obtener_uno('SELECT * FROM productos WHERE id = ?', (producto_id,))
 
         if not producto:
             return False, "Producto no encontrado"
@@ -44,9 +43,7 @@ class PuntoDeVenta:
         return True, "Producto eliminado del carrito"
 
     def actualizar_cantidad(self, producto_id, nueva_cantidad):
-        conn = get_db_connection()
-        producto = conn.execute('SELECT * FROM productos WHERE id = ?', (producto_id,)).fetchone()
-        conn.close()
+        producto = self.db.obtener_uno('SELECT * FROM productos WHERE id = ?', (producto_id,))
 
         if not producto:
             return False, "Producto no encontrado"
@@ -75,14 +72,14 @@ class PuntoDeVenta:
         if not self.carrito:
             return False, "El carrito está vacío"
 
-        conn = get_db_connection()
+        conn = self.db.get_connection()
         try:
             # Crear la venta
             cursor = conn.cursor()
             cursor.execute('''
-                INSERT INTO ventas (fecha, total, usuario_id, estado)
-                VALUES (?, ?, ?, ?)
-            ''', (datetime.now(), self.total, usuario_id, 'completada'))
+                INSERT INTO ventas (fecha, total, usuario_id)
+                VALUES (?, ?, ?)
+            ''', (datetime.now(), self.total, usuario_id))
             venta_id = cursor.lastrowid
 
             # Agregar los detalles de la venta
@@ -110,20 +107,14 @@ class PuntoDeVenta:
             conn.close()
 
     def obtener_producto(self, codigo):
-        conn = get_db_connection()
-        producto = conn.execute('''
+        return self.db.obtener_uno('''
             SELECT * FROM productos 
             WHERE codigo = ? OR nombre LIKE ?
-        ''', (codigo, f'%{codigo}%')).fetchone()
-        conn.close()
-        return producto
+        ''', (codigo, f'%{codigo}%'))
 
     def buscar_productos(self, termino):
-        conn = get_db_connection()
-        productos = conn.execute('''
+        return self.db.obtener_todos('''
             SELECT * FROM productos 
             WHERE codigo LIKE ? OR nombre LIKE ? OR categoria LIKE ?
             LIMIT 10
-        ''', (f'%{termino}%', f'%{termino}%', f'%{termino}%')).fetchall()
-        conn.close()
-        return productos 
+        ''', (f'%{termino}%', f'%{termino}%', f'%{termino}%')) 
