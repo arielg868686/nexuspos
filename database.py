@@ -1,8 +1,5 @@
-import os
 import sqlite3
-import psycopg2
-import psycopg2.extras
-from datetime import datetime
+import os
 import logging
 
 logger = logging.getLogger(__name__)
@@ -12,27 +9,14 @@ class Database:
         self.db_file = 'nexuspos.db'
         if os.environ.get('FLASK_ENV') == 'production':
             self.db_file = os.path.join(os.getcwd(), self.db_file)
-        print(f"Usando base de datos en: {self.db_file}")
+        logger.info(f"Usando base de datos en: {self.db_file}")
         
-        try:
-            # Intentar conectar a PostgreSQL primero
-            database_url = os.environ.get('DATABASE_URL')
-            if database_url and database_url.startswith("postgres://"):
-                database_url = database_url.replace("postgres://", "postgresql://", 1)
-                self.conn = sqlite3.connect(self.db_file)
-                self.crear_tablas()
-                return
-        except Exception as e:
-            print(f"Error al conectar a PostgreSQL: {str(e)}")
-            print("Cambiando a SQLite...")
-        
-        # Si PostgreSQL falla o no está configurado, usar SQLite
         try:
             self.conn = sqlite3.connect(self.db_file)
             self.conn.row_factory = sqlite3.Row
             self.crear_tablas()
         except Exception as e:
-            print(f"Error al inicializar SQLite: {str(e)}")
+            logger.error(f"Error al inicializar SQLite: {str(e)}")
             raise
 
     def crear_tablas(self):
@@ -45,9 +29,7 @@ class Database:
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     username TEXT UNIQUE NOT NULL,
                     password TEXT NOT NULL,
-                    email TEXT UNIQUE,
-                    rol TEXT NOT NULL,
-                    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    rol TEXT NOT NULL
                 )
             ''')
             
@@ -57,11 +39,8 @@ class Database:
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     codigo TEXT UNIQUE NOT NULL,
                     nombre TEXT NOT NULL,
-                    descripcion TEXT,
                     precio REAL NOT NULL,
-                    stock INTEGER NOT NULL DEFAULT 0,
-                    categoria TEXT,
-                    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    stock INTEGER NOT NULL DEFAULT 0
                 )
             ''')
             
@@ -84,7 +63,6 @@ class Database:
                     producto_id INTEGER,
                     cantidad INTEGER NOT NULL,
                     precio_unitario REAL NOT NULL,
-                    subtotal REAL NOT NULL,
                     FOREIGN KEY (venta_id) REFERENCES ventas (id),
                     FOREIGN KEY (producto_id) REFERENCES productos (id)
                 )
@@ -135,34 +113,32 @@ class Database:
         return self.conn
 
     def get_ventas_hoy(self):
-        """Obtiene las ventas del día actual"""
-        hoy = datetime.now().strftime('%Y-%m-%d')
-        return self.obtener_todos('''
-            SELECT v.*, u.nombre as usuario_nombre
-            FROM ventas v
-            LEFT JOIN usuarios u ON v.usuario_id = u.id
-            WHERE DATE(v.fecha) = ?
-            ORDER BY v.fecha DESC
-        ''', (hoy,))
+        try:
+            hoy = datetime.now().strftime('%Y-%m-%d')
+            cursor = self.conn.cursor()
+            cursor.execute('''
+                SELECT COUNT(*) as total_ventas, 
+                       SUM(total) as total_ingresos
+                FROM ventas 
+                WHERE date(fecha) = ?
+            ''', (hoy,))
+            return cursor.fetchone()
+        except Exception as e:
+            logger.error(f"Error al obtener ventas del día: {str(e)}")
+            raise
 
-    def get_productos_mas_vendidos(self, limite=5):
-        """Obtiene los productos más vendidos"""
-        return self.obtener_todos('''
-            SELECT p.*, SUM(dv.cantidad) as total_vendido
-            FROM detalles_venta dv
-            JOIN productos p ON dv.producto_id = p.id
-            GROUP BY p.id
-            ORDER BY total_vendido DESC
-            LIMIT ?
-        ''', (limite,))
-
-    def get_productos_bajo_stock(self):
-        """Obtiene productos con stock por debajo del mínimo"""
-        return self.obtener_todos('''
-            SELECT * FROM productos 
-            WHERE stock <= stock_minimo
-            ORDER BY stock
-        ''')
+    def get_productos_bajos_stock(self, limite=10):
+        try:
+            cursor = self.conn.cursor()
+            cursor.execute('''
+                SELECT * FROM productos 
+                WHERE stock <= ? 
+                ORDER BY stock ASC
+            ''', (limite,))
+            return cursor.fetchall()
+        except Exception as e:
+            logger.error(f"Error al obtener productos con bajo stock: {str(e)}")
+            raise
 
 if __name__ == '__main__':
     db = Database() 
