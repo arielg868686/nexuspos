@@ -3,78 +3,85 @@ from flask_login import LoginManager, UserMixin, login_user, login_required, log
 from werkzeug.security import generate_password_hash, check_password_hash
 import os
 import sys
+import logging
 from database import Database
 from pos import PuntoDeVenta
 from inventario import GestorInventario
 from datetime import datetime
 
+# Configurar logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 # Configurar el entorno
 if os.environ.get('RENDER'):
     os.environ['FLASK_ENV'] = 'production'
-    print("Configurando entorno de producción...")
-    print(f"Directorio actual: {os.getcwd()}")
-    print(f"Contenido del directorio: {os.listdir('.')}")
+    logger.info("Configurando entorno de producción...")
+    logger.info(f"Directorio actual: {os.getcwd()}")
+    logger.info(f"Contenido del directorio: {os.listdir('.')}")
 else:
     os.environ['FLASK_ENV'] = 'development'
-    print("Configurando entorno de desarrollo...")
+    logger.info("Configurando entorno de desarrollo...")
 
-# Configurar logging
-import logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+app = Flask(__name__, 
+            static_folder='static',
+            template_folder='templates')
+app.secret_key = os.environ.get('SECRET_KEY', 'dev_key_123')
+app.config['SESSION_TYPE'] = 'filesystem'
+
+# Configurar la base de datos
+try:
+    db = Database()
+    logger.info("Base de datos inicializada correctamente")
+except Exception as e:
+    logger.error(f"Error al inicializar la base de datos: {str(e)}")
+    raise
+
+# Inicializar componentes
+try:
+    pos = PuntoDeVenta(db)
+    inventario = GestorInventario(db)
+    logger.info("Componentes POS e Inventario inicializados correctamente")
+except Exception as e:
+    logger.error(f"Error al inicializar componentes: {str(e)}")
+    raise
+
+# Configurar Flask-Login
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
 
 class Usuario(UserMixin):
     def __init__(self, id, username):
         self.id = id
         self.username = username
 
-app = Flask(__name__, 
-            static_folder='static',
-            template_folder='templates')
-app.secret_key = os.environ.get('SECRET_KEY', 'e8a521dd52efc86130c0c1392c5dc759')
-app.config['SESSION_TYPE'] = 'filesystem'
-
-# Configuración de la base de datos
-if os.environ.get('FLASK_ENV') == 'production':
-    database_url = os.environ.get('DATABASE_URL')
-    if database_url and database_url.startswith("postgres://"):
-        database_url = database_url.replace("postgres://", "postgresql://", 1)
-    app.config['SQLALCHEMY_DATABASE_URI'] = database_url or 'sqlite:///nexuspos.db'
-else:
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///nexuspos.db'
-
-# Inicializar la base de datos
-db = Database()
-db.crear_tablas()  # Asegurarse de que las tablas existan
-
-# Inicializar el punto de venta
-pos = PuntoDeVenta(db)
-
-# Inicializar el gestor de inventario
-inventario = GestorInventario(db)
-
-# Configuración de Flask-Login
-login_manager = LoginManager()
-login_manager.init_app(app)
-login_manager.login_view = 'login'
-
 @login_manager.user_loader
 def load_user(user_id):
-    if user_id == '1':  # Para el usuario demo
-        return Usuario(1, 'demo')
-    return None
+    try:
+        user = db.obtener_uno("SELECT * FROM usuarios WHERE id = ?", (user_id,))
+        if user:
+            return Usuario(user['id'], user['username'])
+        return None
+    except Exception as e:
+        logger.error(f"Error al cargar usuario: {str(e)}")
+        return None
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    try:
+        return render_template('index.html')
+    except Exception as e:
+        logger.error(f"Error al renderizar index: {str(e)}")
+        return "Error interno del servidor", 500
 
 @app.route('/static/<path:filename>')
 def serve_static(filename):
     try:
-        return send_from_directory('static', filename)
+        return send_from_directory(app.static_folder, filename)
     except Exception as e:
-        app.logger.error(f"Error serving static file {filename}: {str(e)}")
-        return "File not found", 404
+        logger.error(f"Error al servir archivo estático {filename}: {str(e)}")
+        return "Archivo no encontrado", 404
 
 @app.route('/demo')
 @login_required
@@ -195,5 +202,9 @@ def salud():
     return jsonify({"status": "ok"}), 200
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port) 
+    try:
+        logger.info("Iniciando aplicación...")
+        app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
+    except Exception as e:
+        logger.error(f"Error al iniciar la aplicación: {str(e)}")
+        raise 
