@@ -6,7 +6,11 @@ from datetime import datetime
 
 class Database:
     def __init__(self, db_file='nexuspos.db'):
-        self.db_file = db_file
+        if os.environ.get('FLASK_ENV') == 'production':
+            # En producción, usar un directorio temporal
+            self.db_file = os.path.join('/tmp', db_file)
+        else:
+            self.db_file = db_file
         self.is_postgres = os.environ.get('FLASK_ENV') == 'production'
         try:
             self.crear_tablas()

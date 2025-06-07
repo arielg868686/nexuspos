@@ -8,7 +8,12 @@ from inventario import GestorInventario
 from datetime import datetime
 
 # Configurar el entorno
-os.environ['FLASK_ENV'] = 'production' if os.environ.get('RENDER') else 'development'
+if os.environ.get('RENDER'):
+    os.environ['FLASK_ENV'] = 'production'
+    print("Configurando entorno de producción...")
+else:
+    os.environ['FLASK_ENV'] = 'development'
+    print("Configurando entorno de desarrollo...")
 
 class Usuario(UserMixin):
     def __init__(self, id, username):
