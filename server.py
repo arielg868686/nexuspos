@@ -72,6 +72,7 @@ def login():
         
         if username == 'demo' and password == 'demo123':
             session['user_id'] = 1
+            session['authenticated'] = True
             return redirect(url_for('demo'))
         
         return render_template('login.html', error='Credenciales inválidas')
@@ -80,7 +81,6 @@ def login():
 
 @app.route('/logout')
 def logout():
-    session.pop('user_id', None)
     session.clear()
     return redirect(url_for('index'))
 
@@ -90,14 +90,7 @@ def api_productos():
         return jsonify({'error': 'No autorizado'}), 401
     
     categoria = request.args.get('categoria', 'todos')
-    conn = get_db_connection()
-    
-    if categoria == 'todos':
-        productos = conn.execute('SELECT * FROM productos ORDER BY nombre').fetchall()
-    else:
-        productos = conn.execute('SELECT * FROM productos WHERE categoria = ? ORDER BY nombre', (categoria,)).fetchall()
-    
-    conn.close()
+    productos = inventario.obtener_todos_productos(categoria=categoria)
     return jsonify([dict(p) for p in productos])
 
 @app.route('/api/productos/buscar')
@@ -159,7 +152,7 @@ def api_productos_bajo_stock():
     if 'authenticated' not in session:
         return jsonify({'error': 'No autorizado'}), 401
     
-    productos = get_productos_bajo_stock()
+    productos = inventario.obtener_productos_bajo_stock()
     return jsonify([dict(p) for p in productos])
 
 @app.route('/api/ventas/hoy')
@@ -167,15 +160,15 @@ def api_ventas_hoy():
     if 'authenticated' not in session:
         return jsonify({'error': 'No autorizado'}), 401
     
-    ventas = get_ventas_hoy()
-    return jsonify(dict(ventas))
+    ventas = db.get_ventas_hoy()
+    return jsonify([dict(v) for v in ventas])
 
 @app.route('/api/productos/mas-vendidos')
 def api_productos_mas_vendidos():
     if 'authenticated' not in session:
         return jsonify({'error': 'No autorizado'}), 401
     
-    productos = get_productos_mas_vendidos()
+    productos = db.get_productos_mas_vendidos()
     return jsonify([dict(p) for p in productos])
 
 @app.route('/salud')
