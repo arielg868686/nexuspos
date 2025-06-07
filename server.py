@@ -7,7 +7,7 @@ from pos import PuntoDeVenta
 from inventario import GestorInventario
 from datetime import datetime
 
-app = Flask(__name__, static_folder='static')
+app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'e8a521dd52efc86130c0c1392c5dc759')
 app.config['SESSION_TYPE'] = 'filesystem'
 
@@ -38,7 +38,11 @@ def index():
 
 @app.route('/static/<path:filename>')
 def serve_static(filename):
-    return send_from_directory(app.static_folder, filename)
+    try:
+        return send_from_directory('static', filename)
+    except Exception as e:
+        app.logger.error(f"Error serving static file {filename}: {str(e)}")
+        return "File not found", 404
 
 @app.route('/demo')
 def demo():
