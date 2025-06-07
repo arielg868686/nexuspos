@@ -16,4 +16,6 @@ services:
       - key: RENDER_API_KEY
         value: rnd_gr1Dc5
       - key: PORT
-        value: 10000 
+        value: 10000
+      - key: DATABASE_URL
+        value: sqlite:///nexuspos.db 

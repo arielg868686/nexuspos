@@ -33,6 +33,7 @@ source venv/bin/activate  # En Windows: venv\Scripts\activate
 3. Instalar dependencias:
 ```bash
 pip install -r requirements.txt
+python -c "from database import Database; db = Database(); db.crear_tablas()"
 ```
 
 4. Iniciar el servidor:
