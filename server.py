@@ -5,13 +5,13 @@ from pos import PuntoDeVenta
 from inventario import GestorInventario
 
 app = Flask(__name__)
-app.secret_key = os.urandom(24)
+app.secret_key = 'e8a521dd52efc86130c0c1392c5dc759'
 
 # Inicializar la base de datos
 init_db()
 
 # Inicializar el punto de venta
-pos = PuntoDeVenta()
+pos = PuntoDeVenta(db)
 
 # Inicializar el gestor de inventario
 db = Database()
