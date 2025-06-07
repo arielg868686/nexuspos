@@ -7,6 +7,9 @@ from pos import PuntoDeVenta
 from inventario import GestorInventario
 from datetime import datetime
 
+# Configurar el entorno
+os.environ['FLASK_ENV'] = 'production' if os.environ.get('RENDER') else 'development'
+
 class Usuario(UserMixin):
     def __init__(self, id, username):
         self.id = id

@@ -8,19 +8,36 @@ class Database:
     def __init__(self, db_file='nexuspos.db'):
         self.db_file = db_file
         self.is_postgres = os.environ.get('FLASK_ENV') == 'production'
-        self.crear_tablas()
+        try:
+            self.crear_tablas()
+        except Exception as e:
+            print(f"Error al crear tablas: {str(e)}")
+            if self.is_postgres:
+                print("Intentando usar SQLite como fallback...")
+                self.is_postgres = False
+                self.crear_tablas()
 
     def get_connection(self):
         """Obtiene una conexión a la base de datos"""
         if self.is_postgres:
-            database_url = os.environ.get('DATABASE_URL')
-            if database_url and database_url.startswith("postgres://"):
-                database_url = database_url.replace("postgres://", "postgresql://", 1)
-            conn = psycopg2.connect(database_url)
-            conn.row_factory = psycopg2.extras.DictRow
-        else:
-            conn = sqlite3.connect(self.db_file)
-            conn.row_factory = sqlite3.Row
+            try:
+                database_url = os.environ.get('DATABASE_URL')
+                if not database_url:
+                    raise ValueError("DATABASE_URL no está configurada")
+                
+                if database_url.startswith("postgres://"):
+                    database_url = database_url.replace("postgres://", "postgresql://", 1)
+                
+                conn = psycopg2.connect(database_url)
+                conn.row_factory = psycopg2.extras.DictRow
+                return conn
+            except Exception as e:
+                print(f"Error al conectar a PostgreSQL: {str(e)}")
+                print("Cambiando a SQLite...")
+                self.is_postgres = False
+        
+        conn = sqlite3.connect(self.db_file)
+        conn.row_factory = sqlite3.Row
         return conn
 
     def ejecutar(self, query, params=()):
