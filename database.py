@@ -1,22 +1,34 @@
+import os
 import sqlite3
+import psycopg2
+import psycopg2.extras
 from datetime import datetime
 
 class Database:
     def __init__(self, db_file='nexuspos.db'):
         self.db_file = db_file
+        self.is_postgres = os.environ.get('FLASK_ENV') == 'production'
         self.crear_tablas()
 
     def get_connection(self):
         """Obtiene una conexión a la base de datos"""
-        conn = sqlite3.connect(self.db_file)
-        conn.row_factory = sqlite3.Row
+        if self.is_postgres:
+            database_url = os.environ.get('DATABASE_URL')
+            if database_url and database_url.startswith("postgres://"):
+                database_url = database_url.replace("postgres://", "postgresql://", 1)
+            conn = psycopg2.connect(database_url)
+            conn.row_factory = psycopg2.extras.DictRow
+        else:
+            conn = sqlite3.connect(self.db_file)
+            conn.row_factory = sqlite3.Row
         return conn
 
     def ejecutar(self, query, params=()):
         """Ejecuta una consulta SQL"""
         conn = self.get_connection()
         try:
-            conn.execute(query, params)
+            with conn.cursor() as cur:
+                cur.execute(query, params)
             conn.commit()
         finally:
             conn.close()
@@ -25,7 +37,9 @@ class Database:
         """Ejecuta una consulta y retorna un solo resultado"""
         conn = self.get_connection()
         try:
-            return conn.execute(query, params).fetchone()
+            with conn.cursor() as cur:
+                cur.execute(query, params)
+                return cur.fetchone()
         finally:
             conn.close()
 
@@ -33,7 +47,9 @@ class Database:
         """Ejecuta una consulta y retorna todos los resultados"""
         conn = self.get_connection()
         try:
-            return conn.execute(query, params).fetchall()
+            with conn.cursor() as cur:
+                cur.execute(query, params)
+                return cur.fetchall()
         finally:
             conn.close()
 
@@ -42,7 +58,7 @@ class Database:
         # Tabla de usuarios
         self.ejecutar('''
             CREATE TABLE IF NOT EXISTS usuarios (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                id SERIAL PRIMARY KEY,
                 username TEXT UNIQUE NOT NULL,
                 password TEXT NOT NULL,
                 nombre TEXT,
@@ -54,7 +70,7 @@ class Database:
         # Tabla de productos
         self.ejecutar('''
             CREATE TABLE IF NOT EXISTS productos (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                id SERIAL PRIMARY KEY,
                 codigo TEXT UNIQUE NOT NULL,
                 nombre TEXT NOT NULL,
                 descripcion TEXT,
@@ -69,7 +85,7 @@ class Database:
         # Tabla de ventas
         self.ejecutar('''
             CREATE TABLE IF NOT EXISTS ventas (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                id SERIAL PRIMARY KEY,
                 fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 total REAL NOT NULL,
                 usuario_id INTEGER,
@@ -80,7 +96,7 @@ class Database:
         # Tabla de detalles de venta
         self.ejecutar('''
             CREATE TABLE IF NOT EXISTS detalles_venta (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                id SERIAL PRIMARY KEY,
                 venta_id INTEGER NOT NULL,
                 producto_id INTEGER NOT NULL,
                 cantidad INTEGER NOT NULL,
@@ -94,7 +110,7 @@ class Database:
         # Tabla de movimientos de stock
         self.ejecutar('''
             CREATE TABLE IF NOT EXISTS movimientos_stock (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                id SERIAL PRIMARY KEY,
                 producto_id INTEGER NOT NULL,
                 cantidad INTEGER NOT NULL,
                 tipo_movimiento TEXT NOT NULL,
@@ -108,8 +124,9 @@ class Database:
 
         # Insertar usuario demo si no existe
         self.ejecutar('''
-            INSERT OR IGNORE INTO usuarios (username, password, nombre, rol)
-            VALUES (?, ?, ?, ?)
+            INSERT INTO usuarios (username, password, nombre, rol)
+            VALUES (%s, %s, %s, %s)
+            ON CONFLICT (username) DO NOTHING
         ''', ('demo', 'demo123', 'Usuario Demo', 'admin'))
 
     def get_ventas_hoy(self):

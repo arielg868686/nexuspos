@@ -20,7 +20,10 @@ app.config['SESSION_TYPE'] = 'filesystem'
 
 # Configuración de la base de datos
 if os.environ.get('FLASK_ENV') == 'production':
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///nexuspos.db')
+    database_url = os.environ.get('DATABASE_URL')
+    if database_url and database_url.startswith("postgres://"):
+        database_url = database_url.replace("postgres://", "postgresql://", 1)
+    app.config['SQLALCHEMY_DATABASE_URI'] = database_url or 'sqlite:///nexuspos.db'
 else:
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///nexuspos.db'
 
