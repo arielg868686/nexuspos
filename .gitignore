@@ -34,6 +34,7 @@ env/
 # Database
 *.db
 *.sqlite3
+data/
 
 # Environment variables
 .env
@@ -49,6 +50,10 @@ logs/
 Thumbs.db
 
 # Project specific
-nexuspos.db
 instance/
-.webassets-cache 
+.webassets-cache
+
+# Development files
+main.py
+ollama_client.py
+activar-configuracion-completa.ps1 

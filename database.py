@@ -7,9 +7,14 @@ logger = logging.getLogger(__name__)
 
 class Database:
     def __init__(self):
-        self.db_file = 'nexuspos.db'
+        # Crear directorio de datos si no existe
+        data_dir = os.path.join(os.getcwd(), 'data')
+        if not os.path.exists(data_dir):
+            os.makedirs(data_dir)
+            
+        self.db_file = os.path.join(data_dir, 'nexuspos.db')
         if os.environ.get('FLASK_ENV') == 'production':
-            self.db_file = os.path.join(os.getcwd(), self.db_file)
+            self.db_file = os.path.join(os.getcwd(), 'data', 'nexuspos.db')
         logger.info(f"Usando base de datos en: {self.db_file}")
         
         try:
