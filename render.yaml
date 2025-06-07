@@ -1,7 +1,7 @@
 services:
   - type: web
     name: nexuspos
-    env: python
+    runtime: python
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn server:app
     envVars:
@@ -10,4 +10,6 @@ services:
       - key: FLASK_ENV
         value: production
       - key: SECRET_KEY
-        value: e8a521dd52efc86130c0c1392c5dc759 
+        value: e8a521dd52efc86130c0c1392c5dc759
+      - key: RENDER_API_KEY
+        value: rnd_gr1Dc5 
