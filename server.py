@@ -15,13 +15,13 @@ else:
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///nexuspos.db'
 
 # Inicializar la base de datos
-init_db()
+db = Database()
+db.crear_tablas()  # Asegurarse de que las tablas existan
 
 # Inicializar el punto de venta
 pos = PuntoDeVenta(db)
 
 # Inicializar el gestor de inventario
-db = Database()
 inventario = GestorInventario(db)
 
 @app.route('/')
