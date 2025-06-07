@@ -8,7 +8,7 @@ from inventario import GestorInventario
 from datetime import datetime
 
 app = Flask(__name__)
-app.secret_key = 'e8a521dd52efc86130c0c1392c5dc759'
+app.secret_key = os.environ.get('SECRET_KEY', 'e8a521dd52efc86130c0c1392c5dc759')
 app.config['SESSION_TYPE'] = 'filesystem'
 
 # Configuración para producción
