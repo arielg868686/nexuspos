@@ -6,6 +6,13 @@ from inventario import GestorInventario
 
 app = Flask(__name__)
 app.secret_key = 'e8a521dd52efc86130c0c1392c5dc759'
+app.config['SESSION_TYPE'] = 'filesystem'
+
+# Configuración para producción
+if os.environ.get('FLASK_ENV') == 'production':
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///nexuspos.db')
+else:
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///nexuspos.db'
 
 # Inicializar la base de datos
 init_db()
@@ -164,4 +171,5 @@ def api_productos_mas_vendidos():
     return jsonify([dict(p) for p in productos])
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000) 
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port) 
