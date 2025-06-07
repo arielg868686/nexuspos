@@ -1,8 +1,11 @@
-from flask import Flask, render_template, request, redirect, url_for, session, jsonify
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify, flash
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from werkzeug.security import generate_password_hash, check_password_hash
 import os
 from database import init_db, get_productos_bajo_stock, get_ventas_hoy, get_productos_mas_vendidos, Database
 from pos import PuntoDeVenta
 from inventario import GestorInventario
+from datetime import datetime
 
 app = Flask(__name__)
 app.secret_key = 'e8a521dd52efc86130c0c1392c5dc759'
@@ -23,6 +26,11 @@ pos = PuntoDeVenta(db)
 
 # Inicializar el gestor de inventario
 inventario = GestorInventario(db)
+
+# Configuración de Flask-Login
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
 
 @app.route('/')
 def index():
