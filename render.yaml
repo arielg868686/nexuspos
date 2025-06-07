@@ -2,10 +2,8 @@ services:
   - type: web
     name: nexuspos
     runtime: python
-    buildCommand: |
-      pip install -r requirements.txt
-      python -c "from database import Database; db = Database(); db.crear_tablas()"
-    startCommand: gunicorn server:app --bind 0.0.0.0:$PORT
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn server:app
     envVars:
       - key: PYTHON_VERSION
         value: 3.9.0
@@ -14,8 +12,4 @@ services:
       - key: SECRET_KEY
         value: e8a521dd52efc86130c0c1392c5dc759
       - key: RENDER_API_KEY
-        value: rnd_gr1Dc5
-      - key: PORT
-        value: 10000
-      - key: DATABASE_URL
-        value: sqlite:///nexuspos.db 
+        value: rnd_gr1Dc5 
