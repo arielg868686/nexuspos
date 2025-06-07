@@ -12,7 +12,9 @@ class Usuario(UserMixin):
         self.id = id
         self.username = username
 
-app = Flask(__name__)
+app = Flask(__name__, 
+            static_folder='static',
+            template_folder='templates')
 app.secret_key = os.environ.get('SECRET_KEY', 'e8a521dd52efc86130c0c1392c5dc759')
 app.config['SESSION_TYPE'] = 'filesystem'
 
