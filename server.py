@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, session, j
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 import os
+import sys
 from database import Database
 from pos import PuntoDeVenta
 from inventario import GestorInventario
@@ -11,9 +12,16 @@ from datetime import datetime
 if os.environ.get('RENDER'):
     os.environ['FLASK_ENV'] = 'production'
     print("Configurando entorno de producción...")
+    print(f"Directorio actual: {os.getcwd()}")
+    print(f"Contenido del directorio: {os.listdir('.')}")
 else:
     os.environ['FLASK_ENV'] = 'development'
     print("Configurando entorno de desarrollo...")
+
+# Configurar logging
+import logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class Usuario(UserMixin):
     def __init__(self, id, username):

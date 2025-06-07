@@ -7,10 +7,13 @@ from datetime import datetime
 class Database:
     def __init__(self, db_file='nexuspos.db'):
         if os.environ.get('FLASK_ENV') == 'production':
-            # En producción, usar un directorio temporal
-            self.db_file = os.path.join('/tmp', db_file)
+            # En producción, usar el directorio actual
+            self.db_file = os.path.join(os.getcwd(), db_file)
+            print(f"Usando base de datos en: {self.db_file}")
         else:
             self.db_file = db_file
+            print(f"Usando base de datos en: {self.db_file}")
+        
         self.is_postgres = os.environ.get('FLASK_ENV') == 'production'
         try:
             self.crear_tablas()
@@ -19,7 +22,11 @@ class Database:
             if self.is_postgres:
                 print("Intentando usar SQLite como fallback...")
                 self.is_postgres = False
-                self.crear_tablas()
+                try:
+                    self.crear_tablas()
+                except Exception as e:
+                    print(f"Error al crear tablas con SQLite: {str(e)}")
+                    raise
 
     def get_connection(self):
         """Obtiene una conexión a la base de datos"""
