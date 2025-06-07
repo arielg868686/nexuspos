@@ -6,10 +6,8 @@ services:
     startCommand: gunicorn server:app
     envVars:
       - key: PYTHON_VERSION
-        value: 3.9.0
+        value: 3.11.0
       - key: FLASK_ENV
         value: production
-      - key: SECRET_KEY
-        value: e8a521dd52efc86130c0c1392c5dc759
       - key: RENDER_API_KEY
         value: rnd_gr1Dc5 
