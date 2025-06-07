@@ -44,7 +44,11 @@ class Database:
         """Ejecuta una consulta SQL"""
         conn = self.get_connection()
         try:
-            with conn.cursor() as cur:
+            if self.is_postgres:
+                with conn.cursor() as cur:
+                    cur.execute(query, params)
+            else:
+                cur = conn.cursor()
                 cur.execute(query, params)
             conn.commit()
         finally:
@@ -54,7 +58,12 @@ class Database:
         """Ejecuta una consulta y retorna un solo resultado"""
         conn = self.get_connection()
         try:
-            with conn.cursor() as cur:
+            if self.is_postgres:
+                with conn.cursor() as cur:
+                    cur.execute(query, params)
+                    return cur.fetchone()
+            else:
+                cur = conn.cursor()
                 cur.execute(query, params)
                 return cur.fetchone()
         finally:
@@ -64,7 +73,12 @@ class Database:
         """Ejecuta una consulta y retorna todos los resultados"""
         conn = self.get_connection()
         try:
-            with conn.cursor() as cur:
+            if self.is_postgres:
+                with conn.cursor() as cur:
+                    cur.execute(query, params)
+                    return cur.fetchall()
+            else:
+                cur = conn.cursor()
                 cur.execute(query, params)
                 return cur.fetchall()
         finally:
