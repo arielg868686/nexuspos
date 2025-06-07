@@ -90,7 +90,18 @@ def demo():
         # Obtener estadísticas de ventas
         ventas_hoy = pos.get_ventas_hoy()
         productos = inventario.obtener_productos()
-        return render_template('demo.html', ventas_hoy=ventas_hoy, productos=productos)
+        
+        # Filtrar productos con stock bajo
+        productos_bajo_stock = [p for p in productos if p['stock'] < 10]
+        
+        # Obtener productos más vendidos (simulado por ahora)
+        productos_mas_vendidos = productos[:5]
+        
+        return render_template('demo.html',
+                             ventas_hoy=ventas_hoy,
+                             productos=productos,
+                             productos_bajo_stock=productos_bajo_stock,
+                             productos_mas_vendidos=productos_mas_vendidos)
     except Exception as e:
         logger.error(f"Error en demo: {str(e)}")
         return "Error interno del servidor", 500
