@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NexusPOS - Sistema Integral de Gestión Comercial</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
@@ -94,7 +95,7 @@
             <a class="navbar-brand" href="#">
                 <i class="fas fa-store"></i> NexusPOS
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
@@ -109,7 +110,7 @@
                         <a class="nav-link" href="#pricing">Planes</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#demo">Demo</a>
+                        <a class="nav-link" href="{{ url_for('demo') }}">Demo</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="#contact">Contacto</a>
@@ -129,7 +130,7 @@
                     <p class="mb-4">Sistema integral de gestión comercial adaptado a diferentes rubros. Optimiza tus operaciones, aumenta tus ventas y toma mejores decisiones con datos en tiempo real.</p>
                 </div>
             </div>
-            <a href="#demo" class="btn btn-light btn-lg mt-3">Probar Demo Gratis</a>
+            <a href="{{ url_for('demo') }}" class="btn btn-light btn-lg mt-3">Probar Demo Gratis</a>
         </div>
     </section>
 
