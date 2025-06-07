@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexusPOS - Sistema Integral de Gestión Comercial</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #1a237e;
+            --secondary-color: #0d47a1;
+            --accent-color: #2962ff;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .hero-section {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 120px 0;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80') center/cover;
+            opacity: 0.1;
+        }
+        
+        .feature-card {
+            border: none;
+            border-radius: 15px;
+            transition: transform 0.3s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            height: 100%;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .business-type {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+        
+        .business-type:hover {
+            transform: translateY(-5px);
+        }
+        
+        .demo-access {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 80px 0;
+        }
+        
+        .testimonial-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .pricing-card {
+            border: none;
+            border-radius: 15px;
+            transition: transform 0.3s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .pricing-card:hover {
+            transform: translateY(-5px);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-store"></i> NexusPOS
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#features">Características</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#business-types">Rubros</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#pricing">Planes</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#demo">Demo</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#contact">Contacto</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="container text-center position-relative">
+            <h1 class="display-4 mb-4">NexusPOS</h1>
+            <p class="lead mb-4">La solución definitiva para la gestión de tu negocio</p>
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <p class="mb-4">Sistema integral de gestión comercial adaptado a diferentes rubros. Optimiza tus operaciones, aumenta tus ventas y toma mejores decisiones con datos en tiempo real.</p>
+                </div>
+            </div>
+            <a href="#demo" class="btn btn-light btn-lg mt-3">Probar Demo Gratis</a>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="py-5">
+        <div class="container">
+            <h2 class="text-center mb-5">Características Principales</h2>
+            <div class="row">
+                <div class="col-md-4 mb-4">
+                    <div class="card feature-card">
+                        <div class="card-body text-center">
+                            <i class="fas fa-chart-line fa-3x mb-3 text-primary"></i>
+                            <h5 class="card-title">Gestión de Inventario</h5>
+                            <p class="card-text">Control total de stock, alertas de reposición, códigos de barras y seguimiento de productos.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <div class="card feature-card">
+                        <div class="card-body text-center">
+                            <i class="fas fa-cash-register fa-3x mb-3 text-primary"></i>
+                            <h5 class="card-title">Punto de Venta</h5>
+                            <p class="card-text">Sistema de ventas intuitivo con múltiples formas de pago, impresión de tickets y gestión de caja.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <div class="card feature-card">
+                        <div class="card-body text-center">
+                            <i class="fas fa-chart-pie fa-3x mb-3 text-primary"></i>
+                            <h5 class="card-title">Reportes y Análisis</h5>
+                            <p class="card-text">Informes detallados, análisis de ventas y métricas clave para tomar mejores decisiones.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Business Types Section -->
+    <section id="business-types" class="py-5 bg-light">
+        <div class="container">
+            <h2 class="text-center mb-5">Adaptado a tu Negocio</h2>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="business-type">
+                        <i class="fas fa-store fa-3x mb-3 text-primary"></i>
+                        <h4>Maxikioscos</h4>
+                        <p>Gestión completa de inventario, control de stock, ventas y reportes específicos para maxikioscos.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="business-type">
+                        <i class="fas fa-utensils fa-3x mb-3 text-primary"></i>
+                        <h4>Restaurantes</h4>
+                        <p>Control de mesas, pedidos, cocina y gestión de reservas integrada.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="business-type">
+                        <i class="fas fa-shopping-bag fa-3x mb-3 text-primary"></i>
+                        <h4>Tiendas</h4>
+                        <p>Gestión de productos, clientes, ventas y fidelización de clientes.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section id="pricing" class="py-5">
+        <div class="container">
+            <h2 class="text-center mb-5">Planes y Precios</h2>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="card pricing-card">
+                        <div class="card-body text-center">
+                            <h3 class="card-title">Básico</h3>
+                            <h4 class="mb-4">$299/mes</h4>
+                            <ul class="list-unstyled">
+                                <li>1 Usuario</li>
+                                <li>Punto de Venta</li>
+                                <li>Inventario Básico</li>
+                                <li>Reportes Básicos</li>
+                            </ul>
+                            <a href="#contact" class="btn btn-primary">Contactar</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card pricing-card">
+                        <div class="card-body text-center">
+                            <h3 class="card-title">Profesional</h3>
+                            <h4 class="mb-4">$599/mes</h4>
+                            <ul class="list-unstyled">
+                                <li>3 Usuarios</li>
+                                <li>Punto de Venta Avanzado</li>
+                                <li>Inventario Completo</li>
+                                <li>Reportes Detallados</li>
+                                <li>Soporte Prioritario</li>
+                            </ul>
+                            <a href="#contact" class="btn btn-primary">Contactar</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card pricing-card">
+                        <div class="card-body text-center">
+                            <h3 class="card-title">Empresarial</h3>
+                            <h4 class="mb-4">$999/mes</h4>
+                            <ul class="list-unstyled">
+                                <li>Usuarios Ilimitados</li>
+                                <li>Todas las Características</li>
+                                <li>API Personalizada</li>
+                                <li>Soporte 24/7</li>
+                                <li>Capacitación Incluida</li>
+                            </ul>
+                            <a href="#contact" class="btn btn-primary">Contactar</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Demo Access Section -->
+    <section id="demo" class="demo-access">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h3 class="text-center mb-4">Acceso a la Demo</h3>
+                            <form id="demoForm">
+                                <div class="mb-3">
+                                    <label for="username" class="form-label">Usuario</label>
+                                    <input type="text" class="form-control" id="username" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="password" class="form-label">Contraseña</label>
+                                    <input type="password" class="form-control" id="password" required>
+                                </div>
+                                <button type="submit" class="btn btn-primary w-100">Acceder a la Demo</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="py-5">
+        <div class="container">
+            <h2 class="text-center mb-5">Contacto</h2>
+            <div class="row justify-content-center">
+                <div class="col-md-6">
+                    <form>
+                        <div class="mb-3">
+                            <input type="text" class="form-control" placeholder="Nombre" required>
+                        </div>
+                        <div class="mb-3">
+                            <input type="email" class="form-control" placeholder="Email" required>
+                        </div>
+                        <div class="mb-3">
+                            <input type="tel" class="form-control" placeholder="Teléfono" required>
+                        </div>
+                        <div class="mb-3">
+                            <select class="form-control" required>
+                                <option value="">Seleccione su rubro</option>
+                                <option value="maxikiosco">Maxikiosco</option>
+                                <option value="restaurante">Restaurante</option>
+                                <option value="tienda">Tienda</option>
+                                <option value="otro">Otro</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <textarea class="form-control" rows="4" placeholder="Mensaje" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Enviar Mensaje</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4">
+                    <h5>NexusPOS</h5>
+                    <p>Sistema integral de gestión comercial</p>
+                </div>
+                <div class="col-md-4">
+                    <h5>Contacto</h5>
+                    <p>
+                        <i class="fas fa-phone"></i> +54 11 1234-5678<br>
+                        <i class="fas fa-envelope"></i> info@nexuspos.com
+                    </p>
+                </div>
+                <div class="col-md-4">
+                    <h5>Síguenos</h5>
+                    <div class="social-links">
+                        <a href="#" class="text-white me-2"><i class="fab fa-facebook"></i></a>
+                        <a href="#" class="text-white me-2"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="text-white me-2"><i class="fab fa-linkedin"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="text-center mt-4">
+                <p>&copy; 2024 NexusPOS. Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById('demoForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            if(username === 'demo' && password === 'demo123') {
+                window.location.href = 'demo.html';
+            } else {
+                alert('Credenciales incorrectas');
+            }
+        });
+    </script>
+</body>
+</html> 
